@@ -35,8 +35,9 @@ const dbConnection = mysql2.createPool(dbConfig);
 // READ: List all cuisines
 app.get('/cuisines', async function (req, res) {
     try {
-        const [rows] = await dbConnection.query('SELECT * FROM cuisines');
+        const [rows] = await dbConnection.execute('SELECT * FROM cuisines');
         res.render('cuisines', { cuisines: rows });
+
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error');
@@ -44,15 +45,15 @@ app.get('/cuisines', async function (req, res) {
 });
 
 // CREATE: Show form
-app.get('/cuisines/new', function (req, res) {
-    res.render('new-cuisine');
+app.get('/cuisines/create', function (req, res) {
+    res.render('create-cuisines');
 });
 
 // CREATE: Handle form
 app.post('/cuisines', async function (req, res) {
     try {
         const { name } = req.body;
-        await dbConnection.query(
+        await dbConnection.execute(
             'INSERT INTO cuisines (name) VALUES (?)',
             [name]
         );
@@ -66,12 +67,11 @@ app.post('/cuisines', async function (req, res) {
 // UPDATE: Show edit form
 app.get('/cuisines/:id/edit', async function (req, res) {
     try {
-        const [rows] = await dbConnection.query(
+        const [rows] = await dbConnection.execute(
             'SELECT * FROM cuisines WHERE cuisine_id = ?',
             [req.params.id]
         );
-        if (rows.length === 0) return res.status(404).send('Cuisine not found');
-        res.render('edit-cuisine', { cuisine: rows[0] });
+        res.render('edit-cuisines', { cuisine: rows[0] });
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error');
@@ -81,11 +81,12 @@ app.get('/cuisines/:id/edit', async function (req, res) {
 // UPDATE: Handle edit form
 app.post('/cuisines/:id', async function (req, res) {
     try {
+        const cuisineId = req.params.id;
         const { name } = req.body;
-        await dbConnection.query(
-            'UPDATE cuisines SET name = ? WHERE cuisine_id = ?',
-            [name, req.params.id]
-        );
+
+        const sql = "UPDATE cuisines SET name = ? WHERE cuisine_id = ?";
+        const [result] = await dbConnection.execute(sql, [name, cuisineId]);
+
         res.redirect('/cuisines');
     } catch (err) {
         console.error(err);
@@ -96,11 +97,11 @@ app.post('/cuisines/:id', async function (req, res) {
 // DELETE
 app.post('/cuisines/:id/delete', async function (req, res) {
     try {
-        await dbConnection.query(
-            'DELETE FROM cuisines WHERE cuisine_id = ?',
-            [req.params.id]
-        );
+        const cuisineId = req.params.id
+        const sql = "DELETE FROM cuisines WHERE cuisine_id = ?";
+        await dbConnection.execute(sql, [cuisineId]);
         res.redirect('/cuisines');
+
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error');
@@ -111,7 +112,7 @@ app.post('/cuisines/:id/delete', async function (req, res) {
 // READ: List all recipes (with JOINs to cuisines and users)
 app.get('/recipes', async function (req, res) {
     try {
-        const [rows] = await dbConnection.query(
+        const [rows] = await dbConnection.execute(
             `SELECT
                 r.recipe_id,
                 r.title,
@@ -119,7 +120,7 @@ app.get('/recipes', async function (req, res) {
                 r.date_created,
                 r.last_updated,
                 c.name  AS cuisine_name,
-                u.email AS user_email
+                u.email AS email
              FROM recipes r
              JOIN cuisines c ON r.cuisine_id = c.cuisine_id
              JOIN users    u ON r.user_id    = u.user_id
@@ -141,7 +142,7 @@ app.get('/recipes/new', async function (req, res) {
         const [users] = await dbConnection.query(
             'SELECT user_id, email FROM users ORDER BY email'
         );
-        res.render('new-recipe', { cuisines: cuisines, users: users });
+        res.render('new-recipes', { cuisines: cuisines, users: users });
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error');
@@ -152,12 +153,13 @@ app.get('/recipes/new', async function (req, res) {
 app.post('/recipes', async function (req, res) {
     try {
         const { title, instructions, cuisine_id, user_id } = req.body;
-        await dbConnection.query(
-            `INSERT INTO recipes
-                (title, instructions, date_created, last_updated, cuisine_id, user_id)
-             VALUES (?, ?, NOW(), NULL, ?, ?)`,
-            [title, instruction, cuisine_id, user_id]
+
+        await dbConnection.execute(
+            `INSERT INTO recipes (title, instructions, cuisine_id, user_id)
+             VALUES (?, ?, ?, ?)`,
+            [title, instructions, cuisine_id, user_id]
         );
+
         res.redirect('/recipes');
     } catch (err) {
         console.error(err);
@@ -168,11 +170,10 @@ app.post('/recipes', async function (req, res) {
 // UPDATE: Show edit form (with dropdowns pre-selected)
 app.get('/recipes/:id/edit', async function (req, res) {
     try {
-        const [rows] = await dbConnection.query(
+        const [rows] = await dbConnection.execute(
             'SELECT * FROM recipes WHERE recipe_id = ?',
             [req.params.id]
         );
-        if (rows.length === 0) return res.status(404).send('Recipe not found');
 
         const [cuisines] = await dbConnection.query(
             'SELECT cuisine_id, name FROM cuisines ORDER BY name'
@@ -181,7 +182,7 @@ app.get('/recipes/:id/edit', async function (req, res) {
             'SELECT user_id, email FROM users ORDER BY email'
         );
 
-        res.render('edit-recipe', {
+        res.render('edit-recipes', {
             recipe: rows[0],
             cuisines: cuisines,
             users: users
@@ -196,12 +197,14 @@ app.get('/recipes/:id/edit', async function (req, res) {
 app.post('/recipes/:id', async function (req, res) {
     try {
         const { title, instructions, cuisine_id, user_id } = req.body;
-        await dbConnection.query(
+
+        await dbConnection.execute(
             `UPDATE recipes
-                SET title = ?, instructions = ?, cuisine_id = ?, user_id = ?, last_updated = NOW()
+                SET title = ?, instructions = ?, cuisine_id = ?, user_id = ?
              WHERE recipe_id = ?`,
             [title, instructions, cuisine_id, user_id, req.params.id]
         );
+
         res.redirect('/recipes');
     } catch (err) {
         console.error(err);
@@ -212,7 +215,7 @@ app.post('/recipes/:id', async function (req, res) {
 // DELETE
 app.post('/recipes/:id/delete', async function (req, res) {
     try {
-        await dbConnection.query(
+        await dbConnection.execute(
             'DELETE FROM recipes WHERE recipe_id = ?',
             [req.params.id]
         );
@@ -312,5 +315,5 @@ app.get('/recipes/search/results', async function (req, res) {
 
 
 app.listen(port, function () {
-    console.log(`Server has started on port ${port}`);
+    console.log(`Server has started on port 3000`);
 });

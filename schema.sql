@@ -2,16 +2,18 @@ drop database if exists recipes;
 create database recipes;
 use recipes;
 
-create table cuisines(
-    cuisine_id int unsigned auto_increment primary key,
-    name varchar(255) not null
-) engine = innodb;
 
 create table users(
     user_id int unsigned auto_increment primary key,
     email varchar(255) not null unique, -- so two users cannot register the same email
     password varchar(255) not null
 ) engine = innodb;
+
+create table cuisines(
+    cuisine_id int unsigned auto_increment primary key,
+    name varchar(255) not null
+) engine = innodb;
+
 
 create table tags (
     tag_id int unsigned auto_increment primary key,

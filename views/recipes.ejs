@@ -1,24 +1,36 @@
-<!DOCTYPE html>
-<html>
-<head><title>Recipes</title></head>
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Add Recipe</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+
 <body>
-    <h1>All Recipes</h1>
-    <a href="/recipes/new">+ Add New Recipe</a>
+    <div class="container mt-4">
+        <h1>Add New Recipe</h1>
 
-    <ul>
-        <% recipes.forEach(function (recipe) { %>
-            <li>
-                <strong><%= recipe.title %></strong>
-                &mdash; <%= recipe.cuisine_name %>
-                by <%= recipe.user_email %>
+        <form action="/recipes" method="POST">
+            <div class="mb-3">
+                <label class="form-label">Recipe Name</label>
+                <input class="form-control" type="text" name="name" required>
+            </div>
 
-                <a href="/recipes/<%= recipe.recipe_id %>/edit">Edit</a>
+            <div class="mb-3">
+                <label class="form-label">Cuisine</label>
+                <select class="form-select" name="cuisine_id" required>
+                    <% cuisines.forEach(function (cuisine) { %>
+                        <option value="<%= cuisine.cuisine_id %>"><%= cuisine.name %></option>
+                    <% }); %>
+                </select>
+            </div>
 
-                <form action="/recipes/<%= recipe.recipe_id %>/delete" method="POST" style="display:inline;">
-                    <button type="submit">Delete</button>
-                </form>
-            </li>
-        <% }); %>
-    </ul>
+            <button type="submit" class="btn btn-primary">Save</button>
+            <a href="/recipes" class="btn btn-secondary">Back to list</a>
+        </form>
+    </div>
 </body>
+
 </html>
