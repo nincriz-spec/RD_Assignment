@@ -248,12 +248,11 @@ app.get('/recipes/search/results', async function (req, res) {
     try {
         const { title, cuisine_id, date_created, last_updated } = req.query;
 
-        // Start with base query; build WHERE conditions + params dynamically
         let sql = `
             SELECT
                 r.recipe_id,
                 r.title,
-                r.instructions,        -- or 'instruction' — match your column
+                r.instructions,
                 r.date_created,
                 r.last_updated,
                 c.name  AS cuisine_name,
@@ -278,7 +277,7 @@ app.get('/recipes/search/results', async function (req, res) {
 
         if (date_created && date_created !== '') {
             conditions.push('DATE(r.date_created) = ?');
-            params.push(date_created);           // expects 'YYYY-MM-DD'
+            params.push(date_created);
         }
 
         if (last_updated && last_updated !== '') {
@@ -308,7 +307,6 @@ app.get('/recipes/search/results', async function (req, res) {
         res.status(500).send('Database error');
     }
 });
-
 
 
 
