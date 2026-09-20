@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><title>Cuisines</title></head>
+<body>
+    <h1>All Cuisines</h1>
+    <a href="/cuisines/new">+ Add New Cuisine</a>
+
+    <ul>
+        <% cuisines.forEach(function (cuisine) { %>
+            <li>
+                <%= cuisine.name %>
+
+                <a href="/cuisines/<%= cuisine.cuisine_id %>/edit">Edit</a>
+
+                <form action="/cuisines/<%= cuisine.cuisine_id %>/delete" method="POST" style="display:inline;">
+                    <button type="submit">Delete</button>
+                </form>
+            </li>
+        <% }); %>
+    </ul>
+</body>
+</html>

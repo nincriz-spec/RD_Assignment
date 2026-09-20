@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head><title>Search Recipes</title></head>
+<body>
+    <h1>Search Recipes</h1>
+
+    <form action="/recipes/search/results" method="GET">
+        <label>Title:
+            <input type="text" name="title" value="<%= query.title || '' %>">
+        </label><br>
+
+        <label>Cuisine:
+            <select name="cuisine_id">
+                <option value="">-- Any cuisine --</option>
+                <% cuisines.forEach(function (cuisine) { %>
+                    <option value="<%= cuisine.cuisine_id %>"
+                        <%= String(cuisine.cuisine_id) === String(query.cuisine_id) ? 'selected' : '' %>>
+                        <%= cuisine.name %>
+                    </option>
+                <% }); %>
+            </select>
+        </label><br>
+
+        <label>Created date:
+            <input type="date" name="date_created" value="<%= query.date_created || '' %>">
+        </label><br>
+
+        <label>Last updated date:
+            <input type="date" name="last_updated" value="<%= query.last_updated || '' %>">
+        </label><br>
+
+        <button type="submit">Search</button>
+        <a href="/recipes/search">Clear</a>
+    </form>
+
+    <hr>
+
+    <% if (results === null) { %>
+        <p><em>Fill in any combination of fields and click Search.</em></p>
+    <% } else if (results.length === 0) { %>
+        <p>No recipes matched your search.</p>
+    <% } else { %>
+        <h2>Results (<%= results.length %>)</h2>
+        <ul>
+            <% results.forEach(function (recipe) { %>
+                <li>
+                    <strong><%= recipe.title %></strong>
+                    &mdash; <%= recipe.cuisine_name %>
+                    by <%= recipe.user_email %>
+                    <br>
+                    Created: <%= new Date(recipe.date_created).toLocaleDateString() %>
+                    <% if (recipe.last_updated) { %>
+                        &nbsp;|&nbsp; Updated: <%= new Date(recipe.last_updated).toLocaleDateString() %>
+                    <% } %>
+
+                    <a href="/recipes/<%= recipe.recipe_id %>/edit">Edit</a>
+                </li>
+            <% }); %>
+        </ul>
+    <% } %>
+
+    <p><a href="/recipes">Back to all recipes</a></p>
+</body>
+</html>

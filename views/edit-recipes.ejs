@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Recipe</title></head>
+<body>
+    <h1>Edit Recipe</h1>
+
+    <form action="/recipes/<%= recipe.recipe_id %>" method="POST">
+        <label>Title:
+            <input type="text" name="title" value="<%= recipe.title %>" required>
+        </label><br>
+
+        <label>Instructions:
+            <textarea name="instruction" required><%= recipe.instruction %></textarea>
+        </label><br>
+
+        <label>Cuisine:
+            <select name="cuisine_id" required>
+                <% cuisines.forEach(function (cuisine) { %>
+                    <option value="<%= cuisine.cuisine_id %>"
+                        <%= cuisine.cuisine_id === recipe.cuisine_id ? 'selected' : '' %>>
+                        <%= cuisine.name %>
+                    </option>
+                <% }); %>
+            </select>
+        </label><br>
+
+        <label>User:
+            <select name="user_id" required>
+                <% users.forEach(function (user) { %>
+                    <option value="<%= user.user_id %>"
+                        <%= user.user_id === recipe.user_id ? 'selected' : '' %>>
+                        <%= user.email %>
+                    </option>
+                <% }); %>
+            </select>
+        </label><br>
+
+        <button type="submit">Update</button>
+    </form>
+
+    <a href="/recipes">Back to list</a>
+</body>
+</html>

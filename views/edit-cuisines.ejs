@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+<head><title>Edit Cuisine</title></head>
+<body>
+    <h1>Edit Cuisine</h1>
+
+    <form action="/cuisines/<%= cuisine.cuisine_id %>" method="POST">
+        <label>Name:
+            <input type="text" name="name" value="<%= cuisine.name %>" required>
+        </label><br>
+        <button type="submit">Update</button>
+    </form>
+
+    <a href="/cuisines">Back to list</a>
+</body>
+</html>

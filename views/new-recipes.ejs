@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html>
+<head><title>Add Recipe</title></head>
+<body>
+    <h1>Add New Recipe</h1>
+
+    <form action="/recipes" method="POST">
+        <label>Title:
+            <input type="text" name="title" required>
+        </label><br>
+
+        <label>Instructions:
+            <textarea name="instruction" required></textarea>
+        </label><br>
+
+        <label>Cuisine:
+            <select name="cuisine_id" required>
+                <option value="">-- Select a cuisine --</option>
+                <% cuisines.forEach(function (cuisine) { %>
+                    <option value="<%= cuisine.cuisine_id %>"><%= cuisine.name %></option>
+                <% }); %>
+            </select>
+        </label><br>
+
+        <label>User:
+            <select name="user_id" required>
+                <option value="">-- Select a user --</option>
+                <% users.forEach(function (user) { %>
+                    <option value="<%= user.user_id %>"><%= user.email %></option>
+                <% }); %>
+            </select>
+        </label><br>
+
+        <button type="submit">Save</button>
+    </form>
+
+    <a href="/recipes">Back to list</a>
+</body>
+</html>
