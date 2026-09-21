@@ -1,6 +1,8 @@
 const express = require('express');
 const mysql2 = require('mysql2/promise');
 const ejs = require('ejs');
+const cors = require('cors');
+const cookieParser = require('cookie-parser');
 
 const app = express();
 const port = 3000;
@@ -14,9 +16,20 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 
 // Allow Express to process data submitted through HTML forms.
-app.use(express.urlencoded({
-    extended: true
-}));
+app.use(express.urlencoded({extended: true}));
+
+//app.use() is use to set the configurations and the middlewares
+//middleware helps to changes to the request and the response objects
+//middleware can end the request-response cycle
+//middleware call the next middleware function in the stack
+
+app.use(cors({origin: process.env.CORS_ORIGIN,credentials: true,}));
+
+app.use(express.json({ limit: "16kb" }));
+app.use(express.urlencoded({ extended: true, limit: "16kb" })); //extended helps us to pass the nested object
+app.use(cookieParser()); //cookie configuration in the app
+
+
 
 // Create a connection pool to the database.
 const dbConfig = {
@@ -28,7 +41,6 @@ const dbConfig = {
 };
 
 const dbConnection = mysql2.createPool(dbConfig);
-
 
 
 //CRUD FOR CUISINES
@@ -308,6 +320,13 @@ app.get('/recipes/search/results', async function (req, res) {
     }
 });
 
+// 7. 404 handler (optional, should be last route)
+app.use((req, res) => res.status(404).send('Not found'));
+
+// 8. Error handler (optional, must be last)
+app.use((err, req, res, next) => {
+
+});
 
 
 
