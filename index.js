@@ -320,13 +320,13 @@ app.get('/recipes/search/results', async function (req, res) {
     }
 });
 
-// 7. 404 handler (optional, should be last route)
-app.use((req, res) => res.status(404).send('Not found'));
+// // 7. 404 handler (optional, should be last route)
+// app.use((req, res) => res.status(404).send('Not found'));
 
-// 8. Error handler (optional, must be last)
-app.use((err, req, res, next) => {
+// // 8. Error handler (optional, must be last)
+// app.use((err, req, res, next) => {
 
-});
+// });
 
 
 
