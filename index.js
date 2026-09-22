@@ -161,7 +161,7 @@ app.get('/recipes/new', async function (req, res) {
     }
 });
 
-// CREATE: Handle form
+// CREATE:
 app.post('/recipes', async function (req, res) {
     try {
         const { title, instructions, cuisine_id, user_id } = req.body;
@@ -205,7 +205,7 @@ app.get('/recipes/:id/edit', async function (req, res) {
     }
 });
 
-// UPDATE: Handle edit form
+// UPDATE
 app.post('/recipes/:id', async function (req, res) {
     try {
         const { title, instructions, cuisine_id, user_id } = req.body;
@@ -238,27 +238,18 @@ app.post('/recipes/:id/delete', async function (req, res) {
     }
 });
 
-// SEARCH: Show search form
-app.get('/recipes/search', async function (req, res) {
-    try {
-        const [cuisines] = await dbConnection.query(
-            'SELECT cuisine_id, name FROM cuisines ORDER BY name'
-        );
-        res.render('search-recipes', {
-            cuisines: cuisines,
-            results: null,   // null = form not submitted yet
-            query: {}        // so the form fields don't error on first load
-        });
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error');
-    }
-});
-
-// SEARCH: Run the search
+// SEARCH
 app.get('/recipes/search', async function (req, res) {
     try {
         const { title, cuisine_id, date_created, last_updated } = req.query;
+
+        if (!title && !cuisine_id && !date_created && !last_updated) {
+            return res.render('search-recipes', {
+                cuisines: cuisines,
+                results: null,
+                query: {}
+            });
+        }
 
         const bindings = [];
         let query = "SELECT * FROM recipes WHERE 1";
