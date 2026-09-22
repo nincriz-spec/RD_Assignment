@@ -16,14 +16,14 @@ app.set('view engine', 'ejs');
 app.set('views', './views');
 
 // Allow Express to process data submitted through HTML forms.
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 
 //app.use() is use to set the configurations and the middlewares
 //middleware helps to changes to the request and the response objects
 //middleware can end the request-response cycle
 //middleware call the next middleware function in the stack
 
-app.use(cors({origin: process.env.CORS_ORIGIN,credentials: true,}));
+app.use(cors({ origin: process.env.CORS_ORIGIN, credentials: true, }));
 
 app.use(express.json({ limit: "16kb" }));
 app.use(express.urlencoded({ extended: true, limit: "16kb" })); //extended helps us to pass the nested object
@@ -256,62 +256,40 @@ app.get('/recipes/search', async function (req, res) {
 });
 
 // SEARCH: Run the search
-app.get('/recipes/search/results', async function (req, res) {
+app.get('/recipes/search', async function (req, res) {
     try {
         const { title, cuisine_id, date_created, last_updated } = req.query;
 
-        let sql = `
-            SELECT
-                r.recipe_id,
-                r.title,
-                r.instructions,
-                r.date_created,
-                r.last_updated,
-                c.name  AS cuisine_name,
-                u.email AS user_email
-            FROM recipes r
-            JOIN cuisines c ON r.cuisine_id = c.cuisine_id
-            JOIN users    u ON r.user_id    = u.user_id
-        `;
+        const bindings = [];
+        let query = "SELECT * FROM recipes WHERE 1";
 
-        const conditions = [];
-        const params = [];
-
-        if (title && title.trim() !== '') {
-            conditions.push('r.title LIKE ?');
-            params.push('%' + title.trim() + '%');
+        if (title) {
+            query += " AND title LIKE ?";
+            bindings.push("%" + title.trim() + "%");
         }
 
-        if (cuisine_id && cuisine_id !== '') {
-            conditions.push('r.cuisine_id = ?');
-            params.push(cuisine_id);
+        if (cuisine_id) {
+            query += " AND cuisine_id = ?";
+            bindings.push(cuisine_id);
         }
 
-        if (date_created && date_created !== '') {
-            conditions.push('DATE(r.date_created) = ?');
-            params.push(date_created);
+        if (date_created) {
+            query += " AND date_created = ?";
+            bindings.push(date_created);
         }
 
-        if (last_updated && last_updated !== '') {
-            conditions.push('DATE(r.last_updated) = ?');
-            params.push(last_updated);
+        if (last_updated) {
+            query += " AND last_updated = ?";
+            bindings.push(last_updated);
         }
 
-        if (conditions.length > 0) {
-            sql += ' WHERE ' + conditions.join(' AND ');
-        }
+        const [rows] = await dbConnection.execute(query, bindings);
 
-        sql += ' ORDER BY r.date_created DESC';
-
-        const [results] = await dbConnection.query(sql, params);
-
-        const [cuisines] = await dbConnection.query(
-            'SELECT cuisine_id, name FROM cuisines ORDER BY name'
-        );
+        const [cuisines] = await dbConnection.execute("SELECT * FROM cuisines");
 
         res.render('search-recipes', {
             cuisines: cuisines,
-            results: results,
+            results: rows,
             query: req.query
         });
     } catch (err) {
@@ -319,7 +297,6 @@ app.get('/recipes/search/results', async function (req, res) {
         res.status(500).send('Database error');
     }
 });
-
 // // 7. 404 handler (optional, should be last route)
 // app.use((req, res) => res.status(404).send('Not found'));
 
