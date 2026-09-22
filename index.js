@@ -44,7 +44,7 @@ const dbConnection = mysql2.createPool(dbConfig);
 
 
 //CRUD FOR CUISINES
-// READ: List all cuisines
+// READ:
 app.get('/cuisines', async function (req, res) {
     try {
         const [rows] = await dbConnection.execute('SELECT * FROM cuisines');
@@ -66,7 +66,7 @@ app.post('/cuisines', async function (req, res) {
     try {
         const { name } = req.body;
         await dbConnection.execute(
-            'INSERT INTO cuisines (name) VALUES (?)',
+            "INSERT INTO cuisines (name) VALUES (?)",
             [name]
         );
         res.redirect('/cuisines');
@@ -121,7 +121,6 @@ app.post('/cuisines/:id/delete', async function (req, res) {
 });
 
 //CRUD FOR RECIPES
-// READ: List all recipes (with JOINs to cuisines and users)
 app.get('/recipes', async function (req, res) {
     try {
         const [rows] = await dbConnection.execute(
@@ -145,13 +144,12 @@ app.get('/recipes', async function (req, res) {
     }
 });
 
-// CREATE: Show form (with DB-driven dropdowns)
 app.get('/recipes/new', async function (req, res) {
     try {
-        const [cuisines] = await dbConnection.query(
+        const [cuisines] = await dbConnection.execute(
             'SELECT cuisine_id, name FROM cuisines ORDER BY name'
         );
-        const [users] = await dbConnection.query(
+        const [users] = await dbConnection.execute(
             'SELECT user_id, email FROM users ORDER BY email'
         );
         res.render('new-recipes', { cuisines: cuisines, users: users });
@@ -163,23 +161,49 @@ app.get('/recipes/new', async function (req, res) {
 
 // CREATE:
 app.post('/recipes', async function (req, res) {
-    try {
-        const { title, instructions, cuisine_id, user_id } = req.body;
 
-        await dbConnection.execute(
-            `INSERT INTO recipes (title, instructions, cuisine_id, user_id)
-             VALUES (?, ?, ?, ?)`,
-            [title, instructions, cuisine_id, user_id]
-        );
+    const connection = await dbConnection.getConnection();
+
+    console.log(req.body);
+
+    try {
+
+        await connection.beginTransaction();
+
+        const sql = `
+            INSERT INTO recipes
+            (title, instructions, cuisine_id, user_id)
+            VALUES (?, ?, ?, ?)
+        `;
+
+        const [results] = await connection.execute(sql, [
+            req.body.title,
+            req.body.instructions,
+            req.body.cuisine_id,
+            req.body.user_id
+        ]);
+
+        await connection.commit();
 
         res.redirect('/recipes');
-    } catch (err) {
-        console.error(err);
+
+    } catch (e) {
+
+        await connection.rollback();
+
+        console.error(e);
+
         res.status(500).send('Database error');
+
+    } finally {
+
+        await connection.release();
+
     }
+
 });
 
-// UPDATE: Show edit form (with dropdowns pre-selected)
+// UPDATE
 app.get('/recipes/:id/edit', async function (req, res) {
     try {
         const [rows] = await dbConnection.execute(
@@ -187,10 +211,10 @@ app.get('/recipes/:id/edit', async function (req, res) {
             [req.params.id]
         );
 
-        const [cuisines] = await dbConnection.query(
+        const [cuisines] = await dbConnection.execute(
             'SELECT cuisine_id, name FROM cuisines ORDER BY name'
         );
-        const [users] = await dbConnection.query(
+        const [users] = await dbConnection.execute(
             'SELECT user_id, email FROM users ORDER BY email'
         );
 
@@ -208,34 +232,52 @@ app.get('/recipes/:id/edit', async function (req, res) {
 // UPDATE
 app.post('/recipes/:id', async function (req, res) {
     try {
+
         const { title, instructions, cuisine_id, user_id } = req.body;
 
-        await dbConnection.execute(
-            `UPDATE recipes
-                SET title = ?, instructions = ?, cuisine_id = ?, user_id = ?
-             WHERE recipe_id = ?`,
-            [title, instructions, cuisine_id, user_id, req.params.id]
-        );
+        console.log(req.body);
+
+        const recipeId = req.params.id;
+
+        const sql = `UPDATE recipes SET
+                title = ?,
+                instructions = ?,
+                cuisine_id = ?,
+                user_id = ?
+            WHERE recipe_id = ? `;
+
+        await dbConnection.execute(sql, [
+            title,
+            instructions,
+            cuisine_id,
+            user_id,
+            recipeId
+        ]);
 
         res.redirect('/recipes');
+
     } catch (err) {
+
         console.error(err);
+
         res.status(500).send('Database error');
+
     }
 });
 
 // DELETE
 app.post('/recipes/:id/delete', async function (req, res) {
-    try {
-        await dbConnection.execute(
-            'DELETE FROM recipes WHERE recipe_id = ?',
-            [req.params.id]
-        );
-        res.redirect('/recipes');
-    } catch (err) {
-        console.error(err);
-        res.status(500).send('Database error');
-    }
+     try { 
+        const recipeId = req.params.id; 
+        const sql = "DELETE FROM recipes WHERE recipe_id = ? "; 
+        await dbConnection.execute(sql, [recipeId]
+
+        ); 
+        res.redirect('/recipes'); 
+    } catch (err) { 
+        console.error(err); 
+        res.status(500).send('Database error'); 
+    } 
 });
 
 // SEARCH
@@ -288,6 +330,7 @@ app.get('/recipes/search', async function (req, res) {
         res.status(500).send('Database error');
     }
 });
+
 // // 7. 404 handler (optional, should be last route)
 // app.use((req, res) => res.status(404).send('Not found'));
 
@@ -295,9 +338,6 @@ app.get('/recipes/search', async function (req, res) {
 // app.use((err, req, res, next) => {
 
 // });
-
-
-
 
 app.listen(port, function () {
     console.log(`Server has started on port 3000`);
