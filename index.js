@@ -280,57 +280,74 @@ app.post('/recipes/:id/delete', async function (req, res) {
     } 
 });
 
+
 // SEARCH
 app.get('/recipes/search', async function (req, res) {
     try {
         const { title, cuisine_id, date_created, last_updated } = req.query;
 
+        const [cuisines] = await dbConnection.execute(
+            "SELECT * FROM cuisines ORDER BY name"
+        );
+
         if (!title && !cuisine_id && !date_created && !last_updated) {
             return res.render('search-recipes', {
                 cuisines: cuisines,
-                results: null,
+                results: [],
                 query: {}
             });
         }
 
         const bindings = [];
-        let query = "SELECT * FROM recipes WHERE 1";
+
+        let query = `SELECT
+                r.recipe_id,
+                r.title,
+                r.instructions,
+                r.date_created,
+                r.last_updated,
+                c.name AS cuisine_name,
+                u.email AS user_email
+            FROM recipes r
+            JOIN cuisines c ON r.cuisine_id = c.cuisine_id
+            JOIN users u ON r.user_id = u.user_id
+            WHERE 1 `;
 
         if (title) {
-            query += " AND title LIKE ?";
+            query += " AND r.title LIKE ?";
             bindings.push("%" + title.trim() + "%");
         }
 
         if (cuisine_id) {
-            query += " AND cuisine_id = ?";
+            query += " AND r.cuisine_id = ?";
             bindings.push(cuisine_id);
         }
 
         if (date_created) {
-            query += " AND date_created = ?";
+            query += " AND DATE(r.date_created) = ?";
             bindings.push(date_created);
         }
 
         if (last_updated) {
-            query += " AND last_updated = ?";
+            query += " AND DATE(r.last_updated) = ?";
             bindings.push(last_updated);
         }
 
-        const [rows] = await dbConnection.execute(query, bindings);
+        query += " ORDER BY r.date_created DESC";
 
-        const [cuisines] = await dbConnection.execute("SELECT * FROM cuisines");
+        const [rows] = await dbConnection.execute(query, bindings);
 
         res.render('search-recipes', {
             cuisines: cuisines,
             results: rows,
             query: req.query
         });
+
     } catch (err) {
         console.error(err);
         res.status(500).send('Database error');
     }
 });
-
 // // 7. 404 handler (optional, should be last route)
 // app.use((req, res) => res.status(404).send('Not found'));
 

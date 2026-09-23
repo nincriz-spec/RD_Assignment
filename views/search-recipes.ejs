@@ -56,9 +56,9 @@
         <div class="text-muted small"><%= recipe.cuisine_name %><%= recipe.user_email %>
         </div>
                                     
-        <div class="text-muted small">Created <%= new Date(recipe.date_created).toISOString() %><% if (recipe.last_updated && new Date(recipe.last_updated).toISOString()
+        <div class="text-muted small">Created <%= new Date(recipe.date_created).toLocaleDateString() %><% if (recipe.last_updated && new Date(recipe.last_updated).toISOString()
             !==new Date(recipe.date_created).toISOString()) { %>
-                 Updated <%= new Date(recipe.last_updated).toISOString() %><% } %>
+                 Updated <%= new Date(recipe.last_updated).toLocaleDateString %><% } %>
         </div>
         </div>
                                 
